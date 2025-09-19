@@ -66,15 +66,34 @@ int main(int argc, const char * argv[]) {
     @autoreleasepool {
         
         MinimalRecorder *recorder = [[MinimalRecorder alloc] initWithReceiverBlock:^(const AudioBufferList *bufferList, AVAudioFrameCount frameCount, AVAudioTime *timestamp) {
-            @autoreleasepool {
-                ExampleClass *obj = [[ExampleClass alloc] initWithName:@"AudioFrame"];
 
+            /// 1. Scoped autorelease pool - object will be released immediately after this block
+            @autoreleasepool {
+                ExampleClass *obj1 = [[ExampleClass alloc] initWithName:@"Object#1"];
+                [obj1 autorelease];
+
+                /// 1.5 - object that is NOT autoreleased, will leak
+                ExampleClass *obj1b = [[ExampleClass alloc] initWithName:@"Object#1b"];
+                // obj1b is NOT autoreleased, so it will leak
             }
+
+            /// 2. Autorelease - object will be released when pool drains
+            /// As we can see it never gets deallocated which might imply that 
+            /// audio thread does not have an autorelease pool
+            ExampleClass *obj2 = [[ExampleClass alloc] initWithName:@"Object#2"];
+            [obj2 autorelease];
+
+            /// 3. No autorelease pool - object will obviosly leak
+            ExampleClass *obj3 = [[ExampleClass alloc] initWithName:@"Object#3"];
+
+            /// 4. Manual release
+            ExampleClass *obj4 = [[ExampleClass alloc] initWithName:@"Object#4"];
+            [obj4 release];
         }];
         
         NSLog(@"Starting recorder...");
         [recorder start];
-        sleep(5);
+        sleep(1);
         NSLog(@"Stopping recorder...");
         [recorder stop];
         
