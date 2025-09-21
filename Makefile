@@ -1,5 +1,7 @@
 
 # This requires ARC
+./bin/repro2: repro2.mm | prep
+	clang++ -std=c++17 -fobjc-arc -framework Foundation -framework AVFoundation -o $@ $<
 ./bin/repro1: repro1.mm | prep
 	clang++ -std=c++17 -fobjc-arc -framework Foundation -framework AVFoundation -o $@ $<
 

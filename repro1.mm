@@ -92,12 +92,19 @@ typedef void(^AudioReceiverBlock)(const AudioBufferList *bufferList, AVAudioFram
         // This lambda captures inputBuffer - potential memory issue here
         AVAudioConverterInputBlock inputBlock = ^AVAudioBuffer *_Nullable(AVAudioPacketCount inNumberOfPackets, AVAudioConverterInputStatus *outStatus) {
             NSLog(@"🔄 Lambda called with inputBuffer: %@", inputBuffer.bufferName);
+            NSLog(@"🔍 inputBuffer retain count in lambda: %lu", (unsigned long)CFGetRetainCount((__bridge CFTypeRef)inputBuffer));
             *outStatus = AVAudioConverterInputStatus_HaveData;
             return inputBuffer; // inputBuffer is captured by the block
         };
         
+        NSLog(@"🔍 inputBuffer retain count before conversion: %lu", (unsigned long)CFGetRetainCount((__bridge CFTypeRef)inputBuffer));
+        NSLog(@"🔍 inputBlock retain count: %lu", (unsigned long)CFGetRetainCount((__bridge CFTypeRef)inputBlock));
+        
         /// ERROR: This line causes the issue
         [self.audioConverter convertToBuffer:outputBuffer error:&error withInputFromBlock:inputBlock];
+        
+        NSLog(@"🔍 inputBuffer retain count after conversion: %lu", (unsigned long)CFGetRetainCount((__bridge CFTypeRef)inputBuffer));
+        NSLog(@"🔍 inputBlock retain count after conversion: %lu", (unsigned long)CFGetRetainCount((__bridge CFTypeRef)inputBlock));
         
         self.receiverBlock(outputBuffer.audioBufferList, outputBuffer.frameLength, time);
         
